@@ -1,4 +1,4 @@
-/home/osama/Documents/Example/build/CMakeFiles/rebuild_cache.dir
-/home/osama/Documents/Example/build/CMakeFiles/edit_cache.dir
-/home/osama/Documents/Example/build/CMakeFiles/osama.dir
-/home/osama/Documents/Example/build/CMakeFiles/don_segmentation.dir
+/home/osama/Documents/FE/Example/build/CMakeFiles/rebuild_cache.dir
+/home/osama/Documents/FE/Example/build/CMakeFiles/edit_cache.dir
+/home/osama/Documents/FE/Example/build/CMakeFiles/osama.dir
+/home/osama/Documents/FE/Example/build/CMakeFiles/don_segmentation.dir

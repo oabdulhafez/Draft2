@@ -82,7 +82,6 @@ main (int argc, char *argv[])
 {
 /*  ///The smallest scale to use in the DoN filter.
   double scale1;
-
   ///The largest scale to use in the DoN filter.
   double scale2;
 
@@ -105,9 +104,11 @@ main (int argc, char *argv[])
   viewer.setCameraPosition(-21.1433, -23.4669, 12.7822,0.137915, -0.429331, -1.9301,0.316165, 0.28568, 0.904669);
   viewer.setCameraClipDistances(0.0792402, 79.2402); 
   int num_frames;
-  istringstream (argv[1]) >> num_frames;
+  int initial_frame;
+  istringstream (argv[1]) >> initial_frame;
+  istringstream (argv[2]) >> num_frames;
   //string infile = argv[1];
-  for (int a=0;a<=num_frames;++a){
+  for (int a=initial_frame;a<=num_frames;++a){
   /// small scale
   /*istringstream (argv[2]) >> scale1;
   /// large scale
@@ -150,7 +151,7 @@ main (int argc, char *argv[])
   // eliminate far-away z points
   pass.setInputCloud (cloud);
   pass.setFilterFieldName ("z");
-  pass.setFilterLimits (-0.8, 10);
+  pass.setFilterLimits (-0.8, 1.5);
   //pass.setFilterLimitsNegative (true);
   pass.filter (*cloud);
 
@@ -160,8 +161,8 @@ main (int argc, char *argv[])
 
   std::vector<pcl::PointIndices> cluster_indices;
   pcl::EuclideanClusterExtraction<pcl::PointXYZ> ec;
-  ec.setClusterTolerance (0.9);//0.75
-  ec.setMinClusterSize (50);
+  ec.setClusterTolerance (0.75);//0.75
+  ec.setMinClusterSize (10);
   ec.setSearchMethod (tree);
   ec.setInputCloud (cloud);
   ec.extract (cluster_indices);
@@ -342,11 +343,12 @@ main (int argc, char *argv[])
   int j=0;
   double area;
   double density;
-  int k=0;
+  //int k=0;
   int g;
   double volume;
   double sumx, sumy, sumz, sumx2, sumy2, sumz2;
   double slinderness;
+  double symmtry;
   for (std::vector<pcl::PointIndices>::const_iterator it = cluster_indices.begin (); it != cluster_indices.end (); ++it,++j)
   {
     pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_cluster_don (new pcl::PointCloud<pcl::PointXYZ>);
@@ -360,7 +362,7 @@ main (int argc, char *argv[])
     cloud_cluster_don->is_dense = true;
     clusters.push_back(cloud_cluster_don);
     ss << j;
-    area= pcl::calculatePolygonArea (*clusters[j]);
+    //area= pcl::calculatePolygonArea (*clusters[j]);
     sumx=0;
     sumy=0;
     sumz=0;
@@ -384,27 +386,39 @@ main (int argc, char *argv[])
     sumz2=sumz2/double(clusters[j]->points.size());
     volume=sumx2*sumy2*sumz2;
     slinderness=sumz2/sqrt((sumx2*sumx2)+(sumy2*sumy2));
+    symmtry=abs(sumx2-sumy2);
+    density=double(clusters[j]->points.size())/(volume*1000);
+    //cout << "sumz2= " << sumz2 << endl;
     //density= (clusters[j]->points.size()) / area;
-    if (/*(clusters[j]->points.size()>=50)&&(clusters[j]->points.size()<1100)&&*/(slinderness>3 /*try 2*/)&&(volume<0.0003)&&(area<3)){
-    k=k+1;
+    if (/*(clusters[j]->points.size()>=12)&&*//*(clusters[j]->points.size()<1100)&&*//*(symmtry<0.01)&&*/(density>500)&&(slinderness>3 /*try 2*/)&&(volume<0.0001)/*&&(area<3)*/&&(sumz2>0.1)){
+    //k=k+1;
     pcl::visualization::PointCloudColorHandlerCustom<pcl::PointXYZ>red_color (clusters[j], 255, 0, 0); 
     viewer.addPointCloud <pcl::PointXYZ>(clusters[j], red_color,"clusters["+ ss.str()+"]");
-    cout << "volume[" << j << "]=" << volume << endl;}
+    viewer.setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 2, "clusters["+ ss.str()+"]");
     cout << "j=" << j << endl;
     //Save cluster
     cout << "PointCloud representing the Cluster" << j << ": " << clusters[j]->points.size () << " data points." << std::endl;
+    cout << "volume[" << j << "]=" << volume << endl;
+    cout << "sumz2= " << sumz2 << endl;
+    cout << "symmtry= " << symmtry << endl;
+    cout << "slindeness= " << slinderness << endl;
+    cout << "density= " << density << endl;
+    }
+    /*cout << "j=" << j << endl;
+    //Save cluster
+    cout << "PointCloud representing the Cluster" << j << ": " << clusters[j]->points.size () << " data points." << std::endl;*/
     //stringstream ss;
     //ss << "don_cluster_" << j << ".pcd";
     //writer.write<pcl::PointXYZ> (ss.str (), *cloud_cluster_don, false);
   }
-  cout << "k=" << k << endl;
+  //cout << "k=" << k << endl;
   viewer.spinOnce ();
   //while (!viewer.wasStopped ())
     //{
     //you can also do cool processing here
     //FIXME: Note that this is running in a separate thread from viewerPsycho
     //and you should guard against race conditions yourself...
-      viewer.spinOnce ();
+      //viewer.spinOnce ();
     //}
   }
   while (!viewer.wasStopped ())
